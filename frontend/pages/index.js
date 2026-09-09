@@ -113,7 +113,7 @@ export default function Home() {
 
     try {
       // NOTE: Update this URL to your Render deployment before pushing to production
-      const response = await fetch("http://localhost:8000/api/v1/query", {
+      const response = await fetch("https://scaler-chatbot-ragner.onrender.com/api/v1/query", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -1,13 +1,12 @@
 import json
 import os
-from groq import Groq
 from dotenv import load_dotenv
 
 load_dotenv()
 
 def route_query(llm_client, query: str) -> str:
     """
-    Uses Groq's fast LLM to reason about the user's intent and output a strict JSON routing decision.
+    Uses OpenRouter's fast LLM to reason about the user's intent and output a strict JSON routing decision.
     """
     prompt = f"""You are an intelligent routing assistant for an advanced Retrieval-Augmented Generation (RAG) system.
 Your job is to read the user's query and decide which retrieval strategy to use.
