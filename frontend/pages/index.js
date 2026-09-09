@@ -153,7 +153,7 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>Scaler ChatBOT | FDE Demo</title>
+        <title>Scaler ChatBOT | by Saransh Saini</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
       
