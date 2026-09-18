@@ -10,7 +10,7 @@ client = QdrantClient(
     api_key=os.getenv("QDRANT_API_KEY")
 )
 
-collection = "scaler-bot"
+collection = "ragner_master_collection"
 
 print("Fixing indexes...")
 

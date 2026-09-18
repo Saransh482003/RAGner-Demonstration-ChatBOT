@@ -47,7 +47,3 @@ async def root():
         "status": "Online", 
         "message": "RAG API is running."
     }
-
-# if __name__ == "__main__":
-#     print("Starting FastAPI Server...")
-#     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=False)
