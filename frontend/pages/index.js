@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import Head from "next/head";
+import { useRouter } from "next/router";
 import { Geist, Geist_Mono } from "next/font/google";
 import styles from "@/styles/Home.module.css";
 import { 
@@ -10,15 +11,50 @@ import { FiLinkedin, FiGithub } from "react-icons/fi";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
+const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
+const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+// ==========================================
+// Multi-Tenant Company Configuration Dictionary
+// ==========================================
+const COMPANY_DIRECTORY = {
+  master: {
+    displayName: "Global Agent",
+    projectName: null, // Sending null triggers the Global Database Search
+    docs: ["All Indexed Global Documents"],
+    sampleQuestions: [
+      "Compare Microsoft's cloud growth with Amazon's AWS growth.",
+      "What were the total Q2 capital expenditures for Meta and NVIDIA combined?",
+      "What is the career transition rate for the Scaler Data Science program?"
+    ]
+  },
+  scaler: {
+    displayName: "Scaler",
+    projectName: "scaler-bot",
+    docs: [
+      "FDE_Brochure_.pdf",
+      "Academy_brochure_2026.pdf",
+      "DSML_Brochure_2026.pdf",
+      "AI__ML_Agentic_AI_Brochure_.pdf"
+    ],
+    sampleQuestions: [
+      "According to the AI/ML Agentic AI program's placement statistics, what is the career transition rate specifically for the Scaler Data Science program?",
+      "What was Utkarsh Gupta's rank in the Google Hash Code 2019 competition?",
+      "How long is the 'Generative AI for Data Analytics & Automation' module in the DSML program, and what specific projects does it entail?",
+      "What domain options are currently trending in the 'Apply your skills to business problems' module of the DSML Program?",
+      "What library and tooling skills are specifically listed for Project 6 (Meesho - A/B Experimentation Platform - Checkout Conversion)?"
+    ]
+  },
+  nvidia: {
+    displayName: "NVIDIA",
+    projectName: "nvidia",
+    docs: ["NVIDIAAn.pdf"],
+    sampleQuestions: [
+      "What was NVIDIA's Data Center revenue for Q2 FY27 and its year-over-year growth?",
+      "Which specific cloud partners are currently running the NVIDIA Vera Rubin platform?"
+    ]
+  }
+};
 
 const SourceCard = ({ source }) => {
   const [expanded, setExpanded] = useState(false);
@@ -72,6 +108,11 @@ const SourceCard = ({ source }) => {
 };
 
 export default function Home() {
+  const router = useRouter();
+  
+  // Safely initialize with master, then update when Next.js hydration completes
+  const [currentCompany, setCurrentCompany] = useState(COMPANY_DIRECTORY.master);
+  
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [strategy, setStrategy] = useState("auto");
@@ -80,31 +121,22 @@ export default function Home() {
   
   const messagesEndRef = useRef(null);
 
-  // Hardcoded for production recruiter demo
-  const projectName = "scaler-bot";
-  
-  // Pre-populated document list for the dropdown
-  const uploadedDocs = [
-    "FDE_Brochure_.pdf",
-    "Academy_brochure_2026.pdf",
-    "DSML_Brochure_2026.pdf",
-    "AI__ML_Agentic_AI_Brochure_.pdf"
-  ];
-
-  // 5 Verified Sample Questions
-  const sampleQuestions = [
-    "According to the AI/ML Agentic AI program's placement statistics, what is the career transition rate specifically for the Scaler Data Science program?",
-    "What was Utkarsh Gupta's rank in the Google Hash Code 2019 competition?",
-    "How long is the 'Generative AI for Data Analytics & Automation' module in the DSML program, and what specific projects does it entail?",
-    "What domain options are currently trending in the 'Apply your skills to business problems' module of the DSML Program?",
-    "What library and tooling skills are specifically listed for Project 6 (Meesho - A/B Experimentation Platform - Checkout Conversion)?"
-  ];
+  // Catch the URL parameter dynamically 
+  useEffect(() => {
+    if (router.isReady) {
+      const slug = (router.query.company || router.query.c || "master").toString().toLowerCase();
+      setCurrentCompany(COMPANY_DIRECTORY[slug] || COMPANY_DIRECTORY.master);
+      
+      // Reset chat and doc selection when the company context switches
+      setMessages([]);
+      setSelectedDoc("all");
+    }
+  }, [router.isReady, router.query]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Abstracted logic for querying
   const submitQuery = async (queryText) => {
     if (!queryText.trim() || isQuerying) return;
 
@@ -112,14 +144,13 @@ export default function Home() {
     setIsQuerying(true);
 
     try {
-      // NOTE: Update this URL to your Render deployment before pushing to production
       const response = await fetch("https://scaler-chatbot-ragner.onrender.com/api/v1/query", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           query: queryText,
           strategy: strategy,
-          project_name: projectName,
+          project_name: currentCompany.projectName, // Sends `null` for Global, or "nvidia" for scoped
           document_name: selectedDoc === "all" ? null : selectedDoc
         }),
       });
@@ -153,7 +184,7 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>Scaler ChatBOT | by Saransh Saini</title>
+        <title>{currentCompany.displayName} ChatBOT | by Saransh Saini</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
       
@@ -165,7 +196,7 @@ export default function Home() {
             <h1 className={styles.title} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Database size={24} color="#3b82f6" />
               <span>
-                <span style={{ color: "#3b82f6", fontWeight: "800" }}>Scaler</span>
+                <span style={{ color: "#3b82f6", fontWeight: "800" }}>{currentCompany.displayName}</span>
                 <span style={{ color: "#000000", fontWeight: "800", marginLeft: "4px" }}>ChatBOT</span>
               </span>
             </h1>
@@ -177,7 +208,7 @@ export default function Home() {
             <div style={{ marginTop: "16px" }}>
               <h2 className={styles.sectionTitle}>Indexed Corpus</h2>
               <ul className={styles.docList} style={{ padding: 0, listStyle: "none" }}>
-                {uploadedDocs.map((doc, idx) => (
+                {currentCompany.docs.map((doc, idx) => (
                   <li key={idx} className={styles.docItem} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 0", fontSize: "0.875rem", color: "#4b5563" }}>
                     <Database size={14} color="#3b82f6" />
                     <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{doc}</span>
@@ -227,7 +258,7 @@ export default function Home() {
                   <p style={{ margin: "0 0 16px 0", fontWeight: 600, color: "#374151", textAlign: "center" }}>Try testing the pipeline with these sample queries:</p>
                   
                   <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                    {sampleQuestions.map((q, idx) => (
+                    {currentCompany.sampleQuestions.map((q, idx) => (
                       <button
                         key={idx}
                         onClick={() => submitQuery(q)}
@@ -321,8 +352,8 @@ export default function Home() {
                   className={styles.selectInput}
                   style={{ textOverflow: "ellipsis", maxWidth: "200px" }}
                 >
-                  <option value="all">Global Corpus</option>
-                  {uploadedDocs.map((doc, idx) => (
+                  <option value="all">Global Corpus ({currentCompany.displayName})</option>
+                  {currentCompany.docs.map((doc, idx) => (
                     <option key={idx} value={doc}>{doc}</option>
                   ))}
                 </select>
@@ -333,7 +364,7 @@ export default function Home() {
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder="Ask a question about Scaler's documentation..."
+                  placeholder={`Ask a question about ${currentCompany.displayName}'s documentation...`}
                   className={styles.textInput}
                 />
                 <button

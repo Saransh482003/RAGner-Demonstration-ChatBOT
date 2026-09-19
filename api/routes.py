@@ -30,10 +30,10 @@ class QueryRequest(BaseModel):
     query: str
     strategy: str = "auto"
     document_name: Optional[str] = None
-    project_name: str = "default_project"
+    project_name: Optional[str] = None
 
 class RebuildRequest(BaseModel):
-    project_name: str = "default_project"
+    project_name: Optional[str] = None
     document_name: Optional[str] = None
     build_raptor: bool = False
     build_graph: bool = True
