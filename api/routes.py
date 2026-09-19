@@ -7,9 +7,9 @@ from qdrant_client.models import Filter, FieldCondition, MatchValue
 
 # from services.ingesting import parse_pdf_document
 # from services.chunking import advanced_chunking
-from services.builder_raptor import build_raptor_tree
+# from services.builder_raptor import build_raptor_tree
+# from services.builder_graph import build_knowledge_graph
 from services.retrieval_vector import retrieve_vector_context
-from services.builder_graph import build_knowledge_graph
 from services.retrieval_graph import retrieve_graph_context
 from db.qdrant_embedder import get_qdrant_client, init_collection, upsert_chunks
 from services.generation import initialize_llm_client, generate_answer
@@ -67,58 +67,58 @@ def get_existing_chunks_from_qdrant(
     return [{"text": p.payload.get("text", ""), "metadata": p.payload} for p in points]
 
 
-def execute_pipeline_stages(
-    doc_chunks_map: Dict[str, List[Dict[str, Any]]],
-    embedder,
-    llm_client,
-    q_client,
-    project_name: str,
-    build_raptor: bool = True,
-    build_graph: bool = True
-):
-    """
-    Executes RAPTOR and/or GraphRAG independently.
-    If RAPTOR is skipped, GraphRAG automatically falls back to existing Qdrant summaries or base chunks.
-    """
-    for doc_name, base_chunks in doc_chunks_map.items():
-        summary_chunks = []
+# def execute_pipeline_stages(
+#     doc_chunks_map: Dict[str, List[Dict[str, Any]]],
+#     embedder,
+#     llm_client,
+#     q_client,
+#     project_name: str,
+#     build_raptor: bool = True,
+#     build_graph: bool = True
+# ):
+#     """
+#     Executes RAPTOR and/or GraphRAG independently.
+#     If RAPTOR is skipped, GraphRAG automatically falls back to existing Qdrant summaries or base chunks.
+#     """
+#     for doc_name, base_chunks in doc_chunks_map.items():
+#         summary_chunks = []
 
-        # --- STAGE 1: RAPTOR TREE CONSTRUCTION ---
-        if build_raptor:
-            try:
-                print(f"[Stage: RAPTOR] Building tree for: {doc_name}")
-                collapsed_tree = build_raptor_tree(base_chunks, embedder, llm_client)
-                summary_chunks = [
-                    chunk for chunk in collapsed_tree
-                    if chunk["metadata"].get("chunk_type") in ["raptor_summary", "raptor_root_summary"]
-                ]
-                if summary_chunks:
-                    print(f"[Stage: RAPTOR] Upserting {len(summary_chunks)} summaries to Qdrant...")
-                    upsert_chunks(q_client, MASTER_COLLECTION_NAME, project_name, summary_chunks, embedder)
-            except Exception as e:
-                print(f"[Stage: RAPTOR Failed] Error on {doc_name}: {e}")
+#         # --- STAGE 1: RAPTOR TREE CONSTRUCTION ---
+#         if build_raptor:
+#             try:
+#                 print(f"[Stage: RAPTOR] Building tree for: {doc_name}")
+#                 collapsed_tree = build_raptor_tree(base_chunks, embedder, llm_client)
+#                 summary_chunks = [
+#                     chunk for chunk in collapsed_tree
+#                     if chunk["metadata"].get("chunk_type") in ["raptor_summary", "raptor_root_summary"]
+#                 ]
+#                 if summary_chunks:
+#                     print(f"[Stage: RAPTOR] Upserting {len(summary_chunks)} summaries to Qdrant...")
+#                     upsert_chunks(q_client, MASTER_COLLECTION_NAME, project_name, summary_chunks, embedder)
+#             except Exception as e:
+#                 print(f"[Stage: RAPTOR Failed] Error on {doc_name}: {e}")
                 
-        # --- STAGE 2: KNOWLEDGE GRAPH CONSTRUCTION ---
-        if build_graph:
-            try:
-                # If RAPTOR didn't run in this pass, look for existing summaries in Qdrant
-                if not summary_chunks:
-                    print(f"[Stage: GraphRAG] Checking Qdrant for existing summaries for {doc_name}...")
-                    existing_summaries = get_existing_chunks_from_qdrant(
-                        q_client, collection_name=project_name, doc_name=doc_name, chunk_type="raptor_summary"
-                    )
-                    summary_chunks = existing_summaries if existing_summaries else base_chunks
+#         # --- STAGE 2: KNOWLEDGE GRAPH CONSTRUCTION ---
+#         if build_graph:
+#             try:
+#                 # If RAPTOR didn't run in this pass, look for existing summaries in Qdrant
+#                 if not summary_chunks:
+#                     print(f"[Stage: GraphRAG] Checking Qdrant for existing summaries for {doc_name}...")
+#                     existing_summaries = get_existing_chunks_from_qdrant(
+#                         q_client, collection_name=project_name, doc_name=doc_name, chunk_type="raptor_summary"
+#                     )
+#                     summary_chunks = existing_summaries if existing_summaries else base_chunks
 
-                print(f"[Stage: GraphRAG] Building Knowledge Graph with {len(summary_chunks)} chunks...")
-                build_knowledge_graph(
-                    summary_chunks, 
-                    llm_client, 
-                    document_name=doc_name, 
-                    project_name=project_name
-                )
-                print(f"[Stage: GraphRAG Complete] Successfully built graph for: {doc_name}")
-            except Exception as e:
-                print(f"[Stage: GraphRAG Failed] Error building graph for {doc_name}: {e}")
+#                 print(f"[Stage: GraphRAG] Building Knowledge Graph with {len(summary_chunks)} chunks...")
+#                 build_knowledge_graph(
+#                     summary_chunks, 
+#                     llm_client, 
+#                     document_name=doc_name, 
+#                     project_name=project_name
+#                 )
+#                 print(f"[Stage: GraphRAG Complete] Successfully built graph for: {doc_name}")
+#             except Exception as e:
+#                 print(f"[Stage: GraphRAG Failed] Error building graph for {doc_name}: {e}")
 
 
 # @router.post("/upload")

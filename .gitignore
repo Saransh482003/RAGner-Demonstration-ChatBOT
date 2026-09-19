@@ -11,3 +11,5 @@ __pycache__/
 !frontend/**/*.json
 /services/ingesting.py
 /services/chunking.py
+/services/services_raptor.py
+/services/services_graph.py
