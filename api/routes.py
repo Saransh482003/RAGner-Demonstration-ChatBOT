@@ -250,7 +250,7 @@ async def query_documents(request: Request, body: QueryRequest):
             active_strategy = route_query(llm_client, body.query)
 
         if active_strategy == "graph":
-            retrieved_chunks = retrieve_graph_context(body.query, llm_client, project_name=active_collection)
+            retrieved_chunks = retrieve_graph_context(body.query, llm_client, project_name=project_filter)
 
             if not retrieved_chunks:
                 retrieved_chunks = retrieve_vector_context(
