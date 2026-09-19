@@ -5,8 +5,8 @@ from fastapi import APIRouter, UploadFile, File, HTTPException, Request, Form, B
 from pydantic import BaseModel
 from qdrant_client.models import Filter, FieldCondition, MatchValue
 
-from services.ingesting import parse_pdf_document
-from services.chunking import advanced_chunking
+# from services.ingesting import parse_pdf_document
+# from services.chunking import advanced_chunking
 from services.builder_raptor import build_raptor_tree
 from services.retrieval_vector import retrieve_vector_context
 from services.builder_graph import build_knowledge_graph
