@@ -1,8 +1,6 @@
 fastapi
 pydantic
 qdrant-client
-langchain-huggingface
-langchain-text-splitters
 markdownify
 python-dotenv
 uvicorn

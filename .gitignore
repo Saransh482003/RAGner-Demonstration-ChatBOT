@@ -9,3 +9,5 @@ __pycache__/
 **/node_modules/
 !benchmarking/**/*.pdf
 !frontend/**/*.json
+/services/ingesting.py
+/services/chunking.py
