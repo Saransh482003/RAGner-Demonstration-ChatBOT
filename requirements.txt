@@ -8,3 +8,4 @@ numpy
 openai
 neo4j
 rapidfuzz
+requests
